@@ -18,7 +18,6 @@ urlpatterns = patterns('',
 	url(r'^', include('expenses.urls')),
 )
 
-#Server static files in debug mode
 if settings.DEBUG:
 	urlpatterns += patterns('',
 		(r'^uploads/(?P<path>.*)$', 'django.views.static.serve', {

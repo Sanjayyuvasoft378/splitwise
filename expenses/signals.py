@@ -6,9 +6,6 @@ from django.dispatch import receiver
 
 @receiver(post_save, sender=User)
 def create_initial_group(sender, instance, signal, created, **kwargs):
-    """
-    When a user is created, add a default group
-    """
     if created == True:
         group = Group(name=_('Personal expenses'))
         group.save()

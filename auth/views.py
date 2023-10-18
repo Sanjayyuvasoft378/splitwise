@@ -8,9 +8,6 @@ from django.utils.decorators import method_decorator
 from django.views.generic.edit import UpdateView, FormView
 
 class LoginRequiredViewMixin(object):
-    """
-    Replaces the login_required() decorator of function-based views
-    """
     @method_decorator(login_required)
     def dispatch(self, *args, **kwargs):
         return super(LoginRequiredViewMixin, self).dispatch(*args, **kwargs)

@@ -1,13 +1,8 @@
 from django.forms.widgets import ClearableFileInput, DateInput, TimeInput
 from django.utils.translation import ugettext_lazy
 
-#Standard inputs for images, dates and times
-
 
 class ImagePreviewInput(ClearableFileInput):
-    """
-    Provides the file input with a preview for image uploads
-    """
     clear_checkbox_label = ugettext_lazy('No picture')
     template_with_initial = '%(initial)s<br/>%(clear_template)s%(input)s'
     template_with_clear = '<label>%(clear)s %(clear_checkbox_label)s</label>'
@@ -15,9 +10,6 @@ class ImagePreviewInput(ClearableFileInput):
 
 
 class DatePickerInput(DateInput):
-    """
-    Adds the 'datepicker' class to the input
-    """
     def render(self, name, value, attrs=None):
         attrs['type'] = 'date'
         attrs['class'] = 'datepicker'
@@ -26,9 +18,6 @@ class DatePickerInput(DateInput):
 
 
 class TimePickerInput(TimeInput):
-    """
-    Adds the 'timepicker' class to the input
-    """
     def render(self, name, value, attrs=None):
         attrs['type'] = 'time'
         attrs['class'] = 'timepicker'

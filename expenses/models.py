@@ -10,23 +10,11 @@ from decimal import Decimal
 
 
 class GroupManager(models.Manager):
-    """
-    Augments the User model in django.contrib.auth with additional functionality:
-    
-    When retrieving  the queryset, the manager automatically: 
-
-    - Applies select_related on the User model so its expenses are selected
-    - Calculates the sum of the user's expenses and puts it in expense_total
-    """
-
     def get_query_set(self):
         return super(GroupManager, self).get_query_set().select_related('expenses','users').annotate(user_count=Count('users'))
 
 
 class Group(models.Model):
-    """
-    Works in a similar fashion to the default Django groups, but without unique names, and with a creation date
-    """
     name = models.CharField(_('Group name'), max_length=80, unique=False)
     date_created = models.DateTimeField(_('Creation date'), auto_now_add=True)
 
@@ -58,15 +46,11 @@ class Group(models.Model):
                 'user': user,
                 'total': expenses['total'] or Decimal('0')
             }
-
-            #If we loop over the current user, add his total
             if current_user and current_user.pk == user.pk:
                 current_user_total = expenses['total']
 
             user_list.append(user_dict)
 
-
-        #Set the relative totals
         if current_user_total:
             for user_dict in user_list:
                 user_dict['relative_total'] = user_dict['total'] - current_user_total
@@ -82,9 +66,6 @@ class Group(models.Model):
 
 
 class Expense(models.Model):
-    """
-    A basic expense. Each expense is made by one user, and is added to the user's total expenses
-    """
     title = models.CharField(verbose_name=_('Title'), max_length=255)
     description = models.TextField(verbose_name=_('Description'), blank=True)
     amount = models.DecimalField(max_digits=7, decimal_places=2, verbose_name=_('Amount'))
@@ -103,9 +84,6 @@ class Expense(models.Model):
 
 
 class Refund(models.Model):
-    """
-    A basic expense. Each expense is made by one user, and is added to the user's total expenses
-    """
     expense_from = models.OneToOneField(Expense, verbose_name=_('From'), related_name='refund_from')
     expense_to = models.OneToOneField(Expense, verbose_name=_('To'), related_name='refund_to')
 

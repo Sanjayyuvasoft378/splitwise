@@ -13,9 +13,6 @@ from django.utils.translation import ugettext_lazy as _
 from extra_views import SearchableListMixin
 
 class Home(TemplateView):
-    """
-    Redirects authenticated users to the group list
-    """
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_authenticated():
             return redirect('group_list')
@@ -49,9 +46,6 @@ class GroupDelete(LoginRequiredViewMixin, DeleteView):
     success_url = reverse_lazy('group_list')
 
     def delete(self, request, *args, **kwargs):
-        """
-        Only delete the group if it's the last member. Otherwise, leave it
-        """
         self.object = self.get_object()
         success_url = self.get_success_url()
         print(self.object.users.count())
@@ -63,9 +57,6 @@ class GroupDelete(LoginRequiredViewMixin, DeleteView):
 
 
 class InviteCreate(LoginRequiredViewMixin, DetailView):
-    """
-    Shows the URL to invite people to join a group
-    """
     template_name = "expenses/invite_create.html"
     model = Group
 
@@ -74,9 +65,6 @@ class InviteCreate(LoginRequiredViewMixin, DetailView):
 
 
 class InviteDetail(LoginRequiredViewMixin, DetailView):
-    """
-    Shows an invitation, provided that you have a valid invite code
-    """
     template_name = "expenses/invite_detail.html"
     model = Group
 
@@ -89,9 +77,6 @@ class InviteDetail(LoginRequiredViewMixin, DetailView):
 
 
 class InviteAccept(LoginRequiredViewMixin, RedirectView):
-    """
-    Accepts an invitation confirmation via POST, verifies the hash first
-    """
     template_name = "expenses/invite_accept.html"
     http_method_names = ['post',]
 
@@ -106,9 +91,6 @@ class InviteAccept(LoginRequiredViewMixin, RedirectView):
 
 
 class ExpenseViewMixin(object):
-    """
-    Defines basic behavior for all expense views (notably success_url and queryset)
-    """
     model = Expense
 
     def get_queryset(self):
@@ -141,11 +123,8 @@ class ExpenseCreate(ExpenseViewMixin, LoginRequiredViewMixin, CreateView):
     form_class = ExpenseForm
 
     def get_initial(self):
-        """
-        Sets the initial user and group to the one specified in the URL
-        """
         initial = super(ExpenseCreate, self).get_initial()
-        initial = initial.copy() # Copy the dictionary so we don't accidentally change a mutable dict
+        initial = initial.copy()
         initial['user'] = self.request.user
         return initial
 
@@ -158,10 +137,6 @@ class ExpenseCreate(ExpenseViewMixin, LoginRequiredViewMixin, CreateView):
         return super(ExpenseCreate, self).form_valid(form)
 
     def get_success_url(self):
-        """
-        If request.POST['add_another'] is set, add another item
-        instead of redirecting to the usual URL.
-        """
         if self.request.POST.get('add_another', None):
             return reverse('expense_create', kwargs={'group': self.kwargs['group']})
         return super(ExpenseCreate, self).get_success_url()
@@ -174,69 +149,3 @@ class ExpenseUpdate(ExpenseViewMixin, LoginRequiredViewMixin, UpdateView):
 class ExpenseDelete(ExpenseViewMixin, LoginRequiredViewMixin, DeleteView):
     pass
 
-
-class RefundViewMixin(object):
-    """
-    Defines basic behavior for all refund views (notably success_url and queryset)
-    """
-    model = Refund
-
-    # def get_queryset(self):
-    #     try:
-    #         return self.request.user.expense_groups.get(pk=self.kwargs['group']).refund_set.all()
-    #     except Group.DoesNotExist:
-    #         raise Http404
-            
-    def get_success_url(self):
-        return reverse_lazy('expense_list',kwargs={'group':self.kwargs['group']})
-
-
-class RefundCreate(RefundViewMixin, LoginRequiredViewMixin, CreateView):
-    form_class = RefundForm
-
-    def get_initial(self):
-        """
-        Sets the initial user and group to the one specified in the URL
-        """
-        initial = super(RefundCreate, self).get_initial()
-        initial = initial.copy() # Copy the dictionary so we don't accidentally change a mutable dict
-        initial['from_user'] = self.request.user
-        return initial
-
-    def get_form_kwargs(self,**kwargs):
-        kwargs = super(RefundCreate, self).get_form_kwargs(**kwargs)
-        kwargs['users'] = self.request.user.expense_groups.get(pk=self.kwargs['group']).users.all()
-        return kwargs
-
-    def form_valid(self, form):
-        try:
-            form.instance.group = self.request.user.expense_groups.get(pk=self.kwargs['group'])
-        except Group.DoesNotExist:
-            raise Http404
-
-        from_amount = form.cleaned_data.get('amount')
-        to_amount = -from_amount
-
-        expense_from = Expense(user=form.cleaned_data.get('from_user'), amount=from_amount, group=form.instance.group)
-        expense_from.save()
-        expense_to = Expense(user=form.cleaned_data.get('to_user'), amount=to_amount, group=form.instance.group)
-        expense_to.save()
-
-        form.instance.expense_from = expense_from
-        form.instance.expense_to = expense_to
-        form.instance.save()
-
-        return super(RefundCreate, self).form_valid(form)
-
-    def get_success_url(self):
-        """
-        If request.POST['add_another'] is set, add another item
-        instead of redirecting to the usual URL.
-        """
-        if self.request.POST.get('add_another', None):
-            return reverse('refund_create', kwargs={'group': self.kwargs['group']})
-        return super(RefundCreate, self).get_success_url()
-
-
-class RefundDelete(RefundViewMixin, LoginRequiredViewMixin, DeleteView):
-    pass

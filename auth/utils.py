@@ -1,12 +1,7 @@
-#coding: utf-8
-#Utility functions for users
-#Almost an exact copy of https://gist.github.com/turicas/1428479
+
 import unittest
 
 def abbreviate(name, pretty=False):
-    """
-    Abbreviates a name, keeping the first name and first letters only
-    """
     names = name.split()
     result = [names[0]]
     tiny_name = False
@@ -23,9 +18,6 @@ def abbreviate(name, pretty=False):
     return ' '.join(result)
 
 class TestAbbreviate(unittest.TestCase):
-    """
-    Unit tests for the abbreviate function
-    """
     def test_name_and_last_name_should_return_equal(self):
         name = 'Álvaro Justen'
         expected = 'Álvaro J.'
